@@ -81,7 +81,7 @@
         --platform=${ANDROID_PLATFORM_VERSION} \
         --install-dir=${ANDROID_TOOLCHAIN_DIR} \
         --system=${TOOLCHAIN_SYSTEM} \
-		--toolchain=arm-linux-androideabi-4.8
+		--arch=arm
     
 	export RANLIB=arm-linux-androideabi-ranlib
     export AR=arm-linux-androideabi-ar
@@ -107,7 +107,7 @@
         --platform=${ANDROID_PLATFORM_VERSION} \
         --install-dir=${ANDROID_TOOLCHAIN_DIR} \
         --system=${TOOLCHAIN_SYSTEM} \
-        --toolchain=x86-4.8
+        --arch=x86
     
 	export RANLIB=i686-linux-android-ranlib
     export AR=i686-linux-android-ar
