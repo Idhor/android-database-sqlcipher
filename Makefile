@@ -17,7 +17,7 @@ init:
 	git submodule update --init
 	android update project -p .
 	cd ${OPENSSL_DIR} && git clean -dfx && \
-	git checkout -f && ./Configure dist
+	git checkout -f
 
 all: build-external build-jni build-java copy-libs
 

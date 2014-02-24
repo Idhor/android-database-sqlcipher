@@ -25,76 +25,99 @@
     esac
 
     rm ../android-libs/armeabi/libcrypto.a \
+    	../android-libs/armeabi-v7a/libcrypto.a
         ../android-libs/x86/libcrypto.a
 
     git clean -dfx && git checkout -f
-    ./Configure dist
+	sed -i "" 's/MAKEDEPPROG=makedepend/MAKEDEPPROG=$(CC) -M/g' Makefile.org
 
     ANDROID_PLATFORM_VERSION=android-19
     ANDROID_TOOLCHAIN_DIR=/tmp/sqlcipher-android-toolchain
-    OPENSSL_EXCLUSION_LIST=no-krb5 no-gost no-idea no-camellia \
-        no-seed no-bf no-cast no-rc2 no-rc4 no-rc5 no-md2 \
-        no-md4 no-ripemd no-rsa no-ecdh no-sock no-ssl2 no-ssl3 \
-        no-dsa no-dh no-ec no-ecdsa no-tls1 no-x509 no-pkcs7 \
-        no-pbe no-pkcs no-tlsext no-pem no-rfc3779 no-whirlpool \
-        no-ocsp no-x509v3 no-ui no-srp no-ssltrace no-tlsext \
-        no-mdc2 no-ecdh no-engine no-tls2 no-srtp
-
-    # arm build
+    OPENSSL_EXCLUSION_LIST="\
+    no-ssl \
+	no-tls \
+	no-ssl2 \
+	no-ssl3 \
+	no-tls1 \
+	no-tlsext \
+	no-sock \
+	no-engine \
+	no-hw \
+	no-bf \
+	no-camellia \
+	no-cast \
+	no-cms \
+	no-des \
+	no-dh \
+	no-dsa \
+	no-dso \
+	no-ec \
+	no-ecdh \
+	no-ecdsa \
+	no-engine \
+	no-err \
+	no-idea \
+	no-jpake \
+	no-krb5 \
+	no-md2 \
+	no-md4 \
+	no-mdc2 \
+	no-perlasm \
+	no-rc2 \
+	no-rc4 \
+	no-rc5 \
+	no-ripemd \
+	no-rsa \
+	no-seed \
+	no-srp \
+	no-store \
+	no-whirlpool \
+	"
+	
+	export PATH=${ANDROID_TOOLCHAIN_DIR}/bin:$PATH
+	
+	rm -rf ${ANDROID_TOOLCHAIN_DIR}
     ${ANDROID_NDK_ROOT}/build/tools/make-standalone-toolchain.sh \
         --platform=${ANDROID_PLATFORM_VERSION} \
         --install-dir=${ANDROID_TOOLCHAIN_DIR} \
         --system=${TOOLCHAIN_SYSTEM} \
-        --arch=arm
-
-    export PATH=${ANDROID_TOOLCHAIN_DIR}/bin:$PATH
-
-    RANLIB=arm-linux-androideabi-ranlib \
-        AR=arm-linux-androideabi-ar \
-        CC=arm-linux-androideabi-gcc \
-        ./Configure android ${OPENSSL_EXCLUSION_LIST}
-
+		--toolchain=arm-linux-androideabi-4.8
+    
+	export RANLIB=arm-linux-androideabi-ranlib
+    export AR=arm-linux-androideabi-ar
+    export CC=arm-linux-androideabi-gcc
+    
+    # arm
+	make dclean
+    ./Configure android ${OPENSSL_EXCLUSION_LIST}
+	make depend
     make build_crypto
-
-    mv libcrypto.a ../android-libs/armeabi/
-
+    mv -f libcrypto.a ../android-libs/armeabi/
+    
+    # armv7-a
+	make dclean
+    ./Configure android-armv7 ${OPENSSL_EXCLUSION_LIST}
+	make depend
+    make build_crypto
+    mv -f libcrypto.a ../android-libs/armeabi-v7a/
+    
+    # x86    
     rm -rf ${ANDROID_TOOLCHAIN_DIR}
-
-    #armv7 build
     ${ANDROID_NDK_ROOT}/build/tools/make-standalone-toolchain.sh \
         --platform=${ANDROID_PLATFORM_VERSION} \
         --install-dir=${ANDROID_TOOLCHAIN_DIR} \
         --system=${TOOLCHAIN_SYSTEM} \
-        --arch=arm
-
-    export PATH=${ANDROID_TOOLCHAIN_DIR}/bin:$PATH
-
-    RANLIB=arm-linux-androideabi-ranlib \
-        AR=arm-linux-androideabi-ar \
-        CC=arm-linux-androideabi-gcc \
-        ./Configure android-armv7 ${OPENSSL_EXCLUSION_LIST}
-
+        --toolchain=x86-4.8
+    
+	export RANLIB=i686-linux-android-ranlib
+    export AR=i686-linux-android-ar
+    export CC=i686-linux-android-gcc
+    
+	make dclean
+    ./Configure android-x86 ${OPENSSL_EXCLUSION_LIST}
+	make depend
     make build_crypto
-
-    mv libcrypto.a ../android-libs/armeabi-v7a/
-
-    rm -rf ${ANDROID_TOOLCHAIN_DIR}    
-
-    # x86 build
-    ${ANDROID_NDK_ROOT}/build/tools/make-standalone-toolchain.sh \
-        --platform=${ANDROID_PLATFORM_VERSION} \
-        --install-dir=${ANDROID_TOOLCHAIN_DIR} \
-        --system=${TOOLCHAIN_SYSTEM} \
-        --arch=x86
-
-    export PATH=${ANDROID_TOOLCHAIN_DIR}/bin:$PATH
-
-    RANLIB=i686-linux-android-ranlib \
-        AR=i686-linux-android-ar \
-        CC=i686-linux-android-gcc \
-        ./Configure android-x86 ${OPENSSL_EXCLUSION_LIST}
-
-    make build_crypto
-
-    mv libcrypto.a ../android-libs/x86/
+    mv -f libcrypto.a ../android-libs/x86/
+    
+    rm -rf ${ANDROID_TOOLCHAIN_DIR}
 )
